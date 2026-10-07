@@ -1,0 +1,12 @@
+{
+  "name": "studio-kit",
+  "description": "Perkakas kerja tim multi-agent Claude Code",
+  "owner": { "name": "reckyas" },
+  "plugins": [
+    {
+      "name": "studio",
+      "source": "./",
+      "description": "Pasang & perbarui Mode Tim (meja worktree, hook wilayah, jabatan, SOP, gerbang uji) di proyek mana pun"
+    }
+  ]
+}

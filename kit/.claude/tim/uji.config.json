@@ -1,0 +1,5 @@
+{
+  "$catatan": "Triase uji-fitur. 'area': perintah uji dasar per paket, mis. { \"server\": { \"path\": \"^server/\", \"dasar\": [\"npm run lint --prefix server\", \"npm test --prefix server\"] } }. 'pemicu': menambah/menimpa pemicu bawaan (triase-lib.mjs), mis. { \"id\": \"PEMBAYARAN\", \"bobot\": \"kritis\", \"path\": [\"^server/src/bayar/\"], \"blok\": [\"K1\", \"K2\", \"P2\"] }; { \"id\": \"DEPENDENSI\", \"hapus\": true } membuang bawaan.",
+  "area": {},
+  "pemicu": []
+}

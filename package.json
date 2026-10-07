@@ -1,0 +1,12 @@
+{
+  "name": "studio-kit",
+  "version": "0.1.0",
+  "description": "Mode Tim multi-agent Claude Code: meja worktree, hook wilayah, jabatan, SOP, gerbang uji — dapat dipasang di proyek mana pun.",
+  "type": "module",
+  "private": true,
+  "bin": { "studio-kit": "pasang.mjs" },
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test pasang.test.mjs \"kit/tools/tim/*.test.mjs\" \"kit/.claude/hooks/*.test.mjs\" \"kit/.claude/skills/uji-fitur/*.test.mjs\""
+  }
+}

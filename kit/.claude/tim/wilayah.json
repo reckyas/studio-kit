@@ -1,0 +1,63 @@
+{
+  "$catatan": "Peta wilayah tulis per jabatan Mode Tim (docs/tim/SOP_TIM.md). Ditegakkan .claude/hooks/jaga-wilayah.mjs untuk Edit/Write/NotebookEdit. Glob relatif ke root worktree; ** lintas folder, * satu segmen; tidak peka huruf besar. Peran yang tidak ada di sini (Explore, general-purpose, sesi biasa) = Mode Solo, tidak dibatasi. Hanya CTO yang mengubah berkas ini. SESUAIKAN glob 'tulis' dengan struktur folder proyek.",
+  "terlarang": [
+    "**/keystore.properties",
+    "**/*.jks",
+    "**/*.keystore",
+    "**/*.p12",
+    "**/*.pem"
+  ],
+  "singleWriter": [
+    "docs/PROGRESS.md",
+    "docs/BUGLOG.md",
+    "docs/BUGLOG_DETAIL.md",
+    "docs/arsip/**",
+    "docs/plans/IMPLEMENTATION_PLAN*.md",
+    "docs/tim/PAPAN.md",
+    "docs/tim/SOP_TIM.md",
+    "**/CLAUDE.md",
+    "**/AGENTS.md",
+    ".claude/**",
+    ".agents/**",
+    ".gitignore"
+  ],
+  "peran": {
+    "cto": {
+      "tulis": ["**"],
+      "bolehSingleWriter": true
+    },
+    "product-manager": {
+      "tulis": ["docs/plans/PRD*.md", "docs/tim/tiket/**", "docs/tim/laporan/**", "docs/keputusan/**"]
+    },
+    "backend-engineer": {
+      "tulis": ["server/**", "backend/**", "api/**", "docs/tim/laporan/**"]
+    },
+    "frontend-engineer": {
+      "tulis": ["admin/**", "frontend/**", "web/**", "client/**", "docs/tim/laporan/**"]
+    },
+    "mobile-engineer": {
+      "tulis": ["android/**", "ios/**", "mobile/**", "docs/tim/laporan/**"]
+    },
+    "web-engineer": {
+      "tulis": ["site/**", "landing/**", "docs/tim/laporan/**"]
+    },
+    "designer": {
+      "tulis": ["design/**", "docs/design/**", "docs/tim/laporan/**"]
+    },
+    "qa-engineer": {
+      "tulis": ["**/test/**", "**/tests/**", "**/__tests__/**", "**/*.test.*", "**/*.spec.*", "docs/QA_CHECKLIST.md", "docs/tim/laporan/**"]
+    },
+    "security-engineer": {
+      "tulis": ["**/*.test.*", "**/*.spec.*", "docs/SECURITY*.md", "docs/tim/laporan/**"]
+    },
+    "devops-engineer": {
+      "tulis": ["deploy/**", "infra/**", "tools/**", "docker-compose*.yml", "**/Dockerfile", ".github/**", "docs/DEPLOY.md", "docs/RUNBOOK*.md", "docs/tim/laporan/**"]
+    },
+    "code-reviewer": {
+      "tulis": ["docs/tim/laporan/**"]
+    },
+    "tech-writer": {
+      "tulis": ["docs/USER_GUIDE.md", "CHANGELOG.md", "**/README.md", "docs/tim/laporan/**"]
+    }
+  }
+}

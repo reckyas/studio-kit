@@ -1,0 +1,8 @@
+{
+  "name": "studio",
+  "displayName": "Studio Kit — Mode Tim",
+  "description": "Pasang & perbarui cara kerja tim multi-agent (meja worktree, hook wilayah, jabatan, SOP, gerbang uji) di proyek mana pun.",
+  "author": { "name": "reckyas" },
+  "repository": "https://github.com/reckyas/studio-kit",
+  "keywords": ["tim", "multi-agent", "worktree", "sop"]
+}

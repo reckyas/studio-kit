@@ -1,0 +1,10 @@
+{
+  "$catatan": "Konfigurasi meja Mode Tim (tools/tim/meja.mjs). port: basis per layanan, port slot N = basis + N. db: null bila proyek tanpa DB; contoh di README studio-kit. salinLokal: berkas lokal tak ter-commit yang disalin ke worktree baru (jangan keystore). paketPeran: folder paket yang dependensinya perlu dipasang per jabatan.",
+  "branchUtama": "{{BRANCH_UTAMA}}",
+  "folderWorktree": "../worktrees",
+  "port": {},
+  "db": null,
+  "salinLokal": [],
+  "paketPeran": {},
+  "perintahPasang": "npm ci --prefix {paket}"
+}

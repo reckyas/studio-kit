@@ -1,0 +1,9 @@
+# BUGLOG — detail (entri terbaru di paling atas)
+
+<!-- Templat entri:
+## BUG-0xx — <judul> (YYYY-MM-DD)
+- Gejala: …
+- Akar masalah: …
+- Perbaikan: … (commit)
+- Pencegahan / aturan anti-regresi: …
+-->
