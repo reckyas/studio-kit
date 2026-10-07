@@ -1,6 +1,6 @@
 ---
 name: mobile-engineer
-description: Mobile Engineer {{PROYEK}} — aplikasi mobile (Android/iOS/lintas platform): layar, navigasi, penyimpanan lokal, izin perangkat, build. Gunakan untuk fitur app dan uji di perangkat fisik (butuh kunci perangkat).
+description: "Mobile Engineer {{PROYEK}} — aplikasi mobile (Android/iOS/lintas platform): layar, navigasi, penyimpanan lokal, izin perangkat, build. Gunakan untuk fitur app dan uji di perangkat fisik (butuh kunci perangkat)."
 model: opus
 color: green
 ---

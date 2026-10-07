@@ -140,3 +140,19 @@ test("gabungSettings & sisipBlok: kasus tepi", () => {
   assert.throws(() => sisipBlok(`${MULAI}\nputus`, "x"), /tidak berpasangan/);
   assert.equal(sidik("a\r\nb"), sidik("a\nb"));
 });
+
+// Frontmatter jabatan harus YAML sah: nilai polos yang memuat ": " membuat
+// Claude Code melewati berkas itu ("agent not found") — terjadi pada
+// mobile-engineer (deskripsi "...lintas platform): layar"). Nilai seperti itu wajib dikutip.
+test("frontmatter jabatan: nilai berisi ': ' wajib dikutip", () => {
+  const dir = join(KIT, ".claude", "agents");
+  for (const f of readdirSync(dir).filter((n) => n.endsWith(".md"))) {
+    const isi = readFileSync(join(dir, f), "utf8");
+    const fm = isi.split(/^---\s*$/m)[1] ?? "";
+    for (const baris of fm.split(/\r?\n/)) {
+      const m = baris.match(/^([\w-]+):\s(.*)$/);
+      if (!m || /^["']/.test(m[2])) continue;
+      assert.ok(!/:\s/.test(m[2]), `${f}: kunci '${m[1]}' memuat ': ' tanpa kutip`);
+    }
+  }
+});
