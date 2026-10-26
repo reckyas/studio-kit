@@ -1,7 +1,7 @@
 // Jalankan: node --test "tools/tim/*.test.mjs"   (Node 24: `node --test tools/tim/` mencari modul bernama itu dan gagal)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aturKonfig, konfig, KONFIG_BAWAAN, namaPort, portSlot, pilihSlot, namaBranch, validasiArgs, parseArgs, infoKomunikasi, pesanTugas, promptAwal, MAKS_SLOT,
+import { aturKonfig, konfig, KONFIG_BAWAAN, namaPort, portSlot, envSlot, pilihSlot, namaBranch, validasiArgs, parseArgs, infoKomunikasi, pesanTugas, promptAwal, MAKS_SLOT,
   normPath, menyebutPath, rantaiLeluhur, parseProsesWin, parseProsesPosix, parsePortWin, parsePortLsof, deteksiPemakai, pesanPemakai,
   validasiNamaDb, namaDbSlot, branchUntukSlug, perintahHapusFolder, layakFallbackHapus, jalankanLangkah, ringkasLangkah, kodeKeluar } from "./meja-lib.mjs";
 
@@ -353,6 +353,37 @@ test("isiPeluncur: CRLF, chcp 65001, cd relatif peluncur, claude + prompt ter-es
   assert.match(isiPeluncur({ tiket: "T-1", peran: "qa-engineer", prompt: "x" }), /\r\nclaude --agent qa-engineer \^"x\^"\r\n/);
   assert.throws(() => isiPeluncur({ tiket: "T-1", peran: "qa", prompt: "x", claude: "claude & del *" }), /claude tidak sah/);
   assert.throws(() => isiPeluncur({ tiket: "T-1", peran: "qa & x", prompt: "x" }), /peran/);
+});
+
+test("isiPeluncur env: set \"K=V\" setelah cd & sebelum claude; nama/nilai berbahaya ditolak", () => {
+  const isi = isiPeluncur({ tiket: "T-1", peran: "qa-engineer", prompt: "x", env: { CARGO_TARGET_DIR: "G:\\w\\.cache-s1\\cargo-target" } });
+  const baris = isi.split("\r\n");
+  const iSet = baris.indexOf('set "CARGO_TARGET_DIR=G:\\w\\.cache-s1\\cargo-target"');
+  assert.ok(iSet > baris.indexOf('cd /d "%~dp0..\\.."') && iSet < baris.findIndex((b) => b.includes("--agent")));
+  for (const v of ["a%PATH%", "a\"b", "a&del", "a!x!", "a\r\nb", "a|b", "a^b", ""]) {
+    assert.throws(() => isiPeluncur({ tiket: "T-1", peran: "qa", prompt: "x", env: { X: v } }), /env peluncur/, JSON.stringify(v));
+  }
+  assert.throws(() => isiPeluncur({ tiket: "T-1", peran: "qa", prompt: "x", env: { "A B": "x" } }), /env peluncur/);
+  assert.doesNotMatch(isiPeluncur({ tiket: "T-1", peran: "qa", prompt: "x" }), /^set "/m);
+});
+
+test("envSlot: penanda {slot}/{root}/{folderWorktree}, pemisah Windows, validasi konfigurasi", () => {
+  try {
+    aturKonfig({ envSlot: { CARGO_TARGET_DIR: "{folderWorktree}/.cache-s{slot}/cargo-target", ROOT_X: "{root}/x" } });
+    assert.deepEqual(envSlot(2, { root: "G:\\P\\app", folderWorktree: "G:\\P\\worktrees" }),
+      { CARGO_TARGET_DIR: "G:\\P\\worktrees\\.cache-s2\\cargo-target", ROOT_X: "G:\\P\\app\\x" });
+    assert.deepEqual(envSlot(1, { root: "/home/u/app", folderWorktree: "/home/u/worktrees" }).CARGO_TARGET_DIR, "/home/u/worktrees/.cache-s1/cargo-target");
+    assert.throws(() => envSlot(1, { root: "G:\\a%b", folderWorktree: "G:\\w" }), /tidak sah/);
+    aturKonfig({});
+    assert.deepEqual(envSlot(1, { root: "G:\\a", folderWorktree: "G:\\w" }), {});
+    assert.throws(() => aturKonfig({ envSlot: [] }), /envSlot harus objek/);
+    assert.throws(() => aturKonfig({ envSlot: { "lower": "x" } }), /nama envSlot/);
+    assert.throws(() => aturKonfig({ envSlot: { X: "a%b" } }), /nilai envSlot/);
+    assert.throws(() => aturKonfig({ envSlot: { X: 1 } }), /nilai envSlot/);
+    assert.throws(() => aturKonfig({ port: { env: 4000 } }), /nama port/);
+  } finally {
+    aturKonfig(KONFIG_CONTOH);
+  }
 });
 
 test("argsWt: array argumen tanpa shell, judul Meja T-###, cmd /d /c peluncur; ; dan metakarakter ditolak", () => {

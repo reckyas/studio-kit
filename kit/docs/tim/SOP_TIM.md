@@ -90,6 +90,7 @@ Worker **tidak** memakai nomor `BUG-0xx` baru. Pakai placeholder `BUG-<tiket><hu
 Slot 1–5. Tiap meja mendapat port dan DB test sendiri, dihitung dari **`.claude/tim/studio.config.json`**:
 - **Port**: `port.<nama>` adalah basis; port slot N = basis + N (mis. basis `4010` → slot 1 `4011`). Checkout utama memakai port bawaan proyek.
 - **DB test**: `<db.awalan>_s<N>_test`, URL dari `db.urlTest`. Proyek tanpa DB: `"db": null`.
+- **Env slot** (`envSlot`): env yang dipasang peluncur meja sebelum `claude` (penanda `{slot}`, `{root}`, `{folderWorktree}`), mis. `CARGO_TARGET_DIR` per slot → cache build bertahan antar-tiket di slot yang sama dan tidak dipakai bersama meja lain. Jangan dihapus saat `tutup`; hapus manual bila disk penuh. Meja yang dibuka tanpa `--jalankan` memasang env itu sendiri (dicetak `buka`).
 - DB **dev** dipakai bersama; hanya pemegang kunci skema yang boleh menjalankan migrasi.
 - Perintah: `node tools/tim/meja.mjs daftar` (status semua meja), `buka`, `pesan`, `tutup`.
 - Slot, worktree, dan DB bersifat **per-komputer**: satu sprint (CTO + semua mejanya) berjalan di satu mesin.

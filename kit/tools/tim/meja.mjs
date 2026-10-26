@@ -23,7 +23,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSyn
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  aturKonfig, namaPort, portSlot, pilihSlot, namaBranch, validasiArgs, parseArgs, infoKomunikasi, pesanTugas, promptAwal, MAKS_SLOT,
+  aturKonfig, namaPort, portSlot, envSlot, pilihSlot, namaBranch, validasiArgs, parseArgs, infoKomunikasi, pesanTugas, promptAwal, MAKS_SLOT,
   parseProsesWin, parseProsesPosix, parsePortWin, parsePortLsof, rantaiLeluhur, deteksiPemakai, pesanPemakai,
   DIR_PELUNCUR, NAMA_PELUNCUR, NAMA_BENDERA_TUTUP, isiPeluncur, argsWt, cariSesiBaru, deteksiTabMeja, gabungPemakai, rencanaHentikan,
   validasiNamaDb, namaDbSlot, slugAman, folderMejaSah, terbuktiBekasMeja, gitdirMejaSah, normPath, slotBolehDitutup, semuaTurunan, daftarPemakaiTeks, branchUntukSlug, perintahHapusFolder, layakFallbackHapus, jalankanLangkah, ringkasLangkah, kodeKeluar,
@@ -83,6 +83,7 @@ function buka(a) {
     branch,
     base: args.base,
     ...portSlot(slot),
+    env: envSlot(slot, { root: ROOT, folderWorktree: FOLDER_WORKTREE }),
     dibuka: new Date().toISOString(),
     komunikasi,
   };
@@ -145,6 +146,7 @@ function buka(a) {
     console.log(`  #   bash       : ${env}="${meja.testDatabaseUrl}" <perintah test>`);
     console.log(`  #   PowerShell : $env:${env}="${meja.testDatabaseUrl}"; <perintah test>`);
   }
+  for (const [n, v] of Object.entries(meja.env ?? {})) console.log(`  # env slot: bash ${n}="${v}" · PowerShell $env:${n}="${v}"`);
   if (namaPort().length) console.log(`  # port slot ${slot}: ${namaPort().map((n) => `${n} ${meja[n]}`).join(" · ")}`);
   console.log(`  claude --agent ${args.peran} "${promptAwal(meja)}"`);
   cetakPesan(meja);
@@ -169,6 +171,7 @@ function cetakManual(meja, wt, peluncur) {
     console.log(`  PowerShell/cmd : wt -w 0 new-tab --title "Meja ${meja.tiket}" -d "${wt}" cmd /d /c "${peluncur}"`);
     console.log(`  Git Bash       : MSYS_NO_PATHCONV=1 wt -w 0 new-tab --title "Meja ${meja.tiket}" -d "${wt}" cmd /d /c "${peluncur}"`);
   }
+  for (const [n, v] of Object.entries(meja.env ?? {})) console.log(`  env slot       : set "${n}=${v}" (cmd) · $env:${n}="${v}" (PowerShell)`);
   console.log(`  atau tab baru  : cd "${wt}"  lalu  claude --agent ${meja.peran} "${promptAwal(meja)}"`);
 }
 
@@ -179,7 +182,7 @@ function cetakManual(meja, wt, peluncur) {
 // Isi peluncur + argumen wt (murni, bisa melempar) — dipanggil sebelum worktree dibuat (K1) dan saat membuka tab.
 function siapkanTab(meja, wt) {
   const peluncur = join(wt, DIR_PELUNCUR, NAMA_PELUNCUR);
-  const isi = isiPeluncur({ tiket: meja.tiket, peran: meja.peran, prompt: promptAwal(meja), claude: cariClaude() });
+  const isi = isiPeluncur({ tiket: meja.tiket, peran: meja.peran, prompt: promptAwal(meja), claude: cariClaude(), env: meja.env ?? {} });
   return { peluncur, isi, args: argsWt({ tiket: meja.tiket, wt, peluncur }) };
 }
 

@@ -56,10 +56,15 @@ Pemasang tidak melakukan commit, push, atau akses jaringan. Tinjau `git status`,
      },
      "salinLokal": ["server/.env", "web/.env.local"],
      "paketPeran": { "backend-engineer": ["server"], "frontend-engineer": ["web"] },
-     "perintahPasang": "npm ci --prefix {paket}"
+     "perintahPasang": "npm ci --prefix {paket}",
+     "envSlot": { "CARGO_TARGET_DIR": "{folderWorktree}/.cache-s{slot}/cargo-target" }
    }
    ```
    Port slot N = basis + N. DB test slot N = `<awalan>_s<N>_test`. Proyek tanpa DB: `"db": null`.
+   `envSlot` (opsional, bawaan `{}`): env per slot yang dipasang peluncur meja (`buka --jalankan`) sebelum `claude`, mis. cache build
+   per slot agar tetap hangat antar-tiket. Penanda: `{slot}`, `{root}` (checkout utama), `{folderWorktree}` (absolut). Nama env harus
+   huruf besar/angka/`_`; nilai tidak boleh memuat `" % ! ^ & | < >` atau baris baru. Folder-nya tidak dihapus saat `tutup`.
+   Tanpa `--jalankan`, `buka` mencetak env itu untuk dipasang manual.
    Proyek Anda sendiri yang harus membaca port/DB slot itu (mis. lewat variabel lingkungan) saat dev server dan test dijalankan.
 2. **`.claude/tim/wilayah.json`** — glob folder per jabatan mengikuti struktur repo Anda.
 3. **Penanda `SESUAIKAN`** di jabatan, SOP, dan `referensi.md`: `grep -rn SESUAIKAN .claude docs/tim`.

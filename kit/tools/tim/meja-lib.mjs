@@ -12,6 +12,10 @@ export const MAKS_SLOT = 5;
  *   salinLokal     : berkas lokal tak ter-commit yang disalin ke worktree baru (JANGAN keystore/secret rilis).
  *   paketPeran     : { jabatan: [folder paket] } → petunjuk pemasangan dependensi di worktree baru.
  *   perintahPasang : templat perintah per paket, memuat {paket}.
+ *   envSlot        : { NAMA_ENV: templat } → env yang dipasang peluncur meja (--jalankan) sebelum claude, mis. cache build
+ *                    per slot { "CARGO_TARGET_DIR": "{folderWorktree}/.cache-s{slot}/cargo-target" }. Penanda: {slot},
+ *                    {root} (checkout utama, absolut), {folderWorktree} (absolut). Folder per slot bertahan setelah meja
+ *                    ditutup → build meja berikutnya di slot itu hangat; dua meja tak pernah berbagi folder (tanpa rebutan kunci).
  */
 export const KONFIG_BAWAAN = Object.freeze({
   branchUtama: "main",
@@ -21,11 +25,12 @@ export const KONFIG_BAWAAN = Object.freeze({
   salinLokal: [],
   paketPeran: {},
   perintahPasang: "npm ci --prefix {paket}",
+  envSlot: {},
 });
 let K = KONFIG_BAWAAN;
 export const konfig = () => K;
 
-const KUNCI_MEJA = ["tiket", "peran", "slot", "branch", "base", "dibuka", "komunikasi", "testDb", "testDatabaseUrl"];
+const KUNCI_MEJA = ["tiket", "peran", "slot", "branch", "base", "dibuka", "komunikasi", "testDb", "testDatabaseUrl", "env"];
 
 /** Validasi + pasang konfigurasi proyek. Melempar galat berbahasa jelas bila bentuknya salah. */
 export function aturKonfig(mentah = {}) {
@@ -48,8 +53,31 @@ export function aturKonfig(mentah = {}) {
   }
   if (!Array.isArray(k.salinLokal) || !k.salinLokal.every((x) => typeof x === "string" && !x.includes(".."))) throw new Error("studio.config: salinLokal harus larik path relatif");
   if (typeof k.perintahPasang !== "string" || !k.perintahPasang.includes("{paket}")) throw new Error("studio.config: perintahPasang wajib memuat {paket}");
+  if (!k.envSlot || typeof k.envSlot !== "object" || Array.isArray(k.envSlot)) throw new Error("studio.config: envSlot harus objek { NAMA_ENV: templat }");
+  for (const [nama, nilai] of Object.entries(k.envSlot)) {
+    if (!POLA_NAMA_ENV.test(nama)) throw new Error(`studio.config: nama envSlot '${nama}' tidak sah (huruf besar/angka/_)`);
+    if (typeof nilai !== "string" || !POLA_NILAI_ENV.test(nilai)) throw new Error(`studio.config: nilai envSlot '${nama}' wajib teks tanpa " % ! ^ & | < > atau baris baru`);
+  }
   K = Object.freeze(k);
   return K;
+}
+
+const POLA_NAMA_ENV = /^[A-Z_][A-Z0-9_]{0,63}$/;
+// Nilai masuk peluncur cmd sebagai `set "NAMA=nilai"`: tolak metakarakter cmd (% ekspansi, ! delayed, kutip, pipa/redirect).
+const POLA_NILAI_ENV = /^[^"%!^&|<>\r\n\0]{1,1024}$/;
+
+/**
+ * Env meja slot N dari `envSlot`: penanda {slot}/{root}/{folderWorktree} diganti; di Windows (root `X:\`) pemisah path
+ * diseragamkan ke `\`. Hasil divalidasi ulang karena nilai root/folder ikut masuk peluncur cmd.
+ */
+export function envSlot(n, { root, folderWorktree }) {
+  const win = /^[A-Za-z]:[\\/]/.test(String(root));
+  return Object.fromEntries(Object.entries(K.envSlot).map(([nama, t]) => {
+    let v = t.replaceAll("{slot}", String(n)).replaceAll("{root}", root).replaceAll("{folderWorktree}", folderWorktree);
+    if (win) v = v.replaceAll("/", "\\");
+    if (!POLA_NILAI_ENV.test(v)) throw new Error(`envSlot ${nama}: nilai hasil tidak sah: ${v}`);
+    return [nama, v];
+  }));
 }
 
 /** Nama-nama port yang dikonfigurasi (kunci di meja.local.json). */
@@ -461,7 +489,7 @@ export function escapeArgCmd(s) {
  * tetap terbuka berisi "[process exited with code 1]".
  * `claude` = nama perintah polos, atau path absolut ke claude.exe (hasil `where`).
  */
-export function isiPeluncur({ tiket, peran, prompt, claude = "claude" }) {
+export function isiPeluncur({ tiket, peran, prompt, claude = "claude", env = {} }) {
   polaTiket(tiket);
   if (!/^[a-z0-9-]+$/.test(peran ?? "")) throw new Error("peran tidak sah");
   const c = String(claude);
@@ -469,12 +497,17 @@ export function isiPeluncur({ tiket, peran, prompt, claude = "claude" }) {
   if (/^[A-Za-z0-9._-]+$/.test(c)) prog = c;
   else if (/^[A-Za-z]:[\\/][^"\r\n\0]*\.exe$/i.test(c)) prog = `"${c.replaceAll("%", "%%")}"`;
   else throw new Error(`path claude tidak sah: ${c}`);
+  const setEnv = Object.entries(env).map(([nama, v]) => {
+    if (!POLA_NAMA_ENV.test(nama) || !POLA_NILAI_ENV.test(String(v))) throw new Error(`env peluncur tidak sah: ${nama}`);
+    return `set "${nama}=${v}"`;
+  });
   return [
     "@echo off",
     `rem Peluncur meja ${tiket}, dibuat oleh: node tools/tim/meja.mjs buka --jalankan (T-027). Lokal, jangan di-commit.`,
     "chcp 65001 >nul",
     "setlocal DisableDelayedExpansion",
     'cd /d "%~dp0..\\.."',
+    ...setEnv,
     `${prog} --agent ${peran} ${escapeArgCmd(prompt)}`,
     `if exist "%~dp0${NAMA_BENDERA_TUTUP}" exit 0`,
     "echo.",
