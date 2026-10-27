@@ -23,6 +23,8 @@ export const MULAI = "<!-- studio-kit:mulai (blok ini dikelola studio-kit; edit 
 export const AKHIR = "<!-- studio-kit:akhir -->";
 export const JABATAN_WAJIB = ["cto", "code-reviewer"];
 const HOOK_CMD = 'node "${CLAUDE_PROJECT_DIR}/.claude/hooks/jaga-wilayah.mjs"';
+// Path dari akar git: tetap jalan di worktree meja dan saat cwd sesi pindah ke subfolder.
+export const STATUSLINE_CMD = 'node "$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.claude/statusline.mjs"';
 const GITIGNORE = ["# Mode Tim (studio-kit): identitas meja per worktree", ".claude/tim/*.local.*"];
 
 const KERANGKA = new Set([
@@ -33,7 +35,7 @@ const KERANGKA = new Set([
 const golongan = (rel) => {
   if (rel === "CLAUDE.tim.md") return "BLOK";
   if (KERANGKA.has(rel)) return "KERANGKA";
-  if (rel.startsWith("tools/tim/") || rel.startsWith(".claude/hooks/") || rel.startsWith(".claude/skills/uji-fitur/")) return "MESIN";
+  if (rel === ".claude/statusline.mjs" || rel.startsWith("tools/tim/") || rel.startsWith(".claude/hooks/") || rel.startsWith(".claude/skills/uji-fitur/")) return "MESIN";
   return "PROYEK";
 };
 
@@ -49,14 +51,21 @@ function telusur(dir, akar = dir) {
 
 const isi = (s, nilai) => s.replaceAll("{{PROYEK}}", nilai.proyek).replaceAll("{{CEO}}", nilai.ceo).replaceAll("{{BRANCH_UTAMA}}", nilai.branchUtama);
 
-/** Daftarkan hook jaga-wilayah di settings tanpa mengusik hook lain. Mengembalikan true bila berubah. */
+/** Daftarkan hook jaga-wilayah tanpa mengusik hook lain, dan status line bila proyek belum punya. Mengembalikan true bila berubah. */
 export function gabungSettings(s) {
+  let berubah = false;
   s.hooks ??= {};
   s.hooks.PreToolUse ??= [];
   const sudah = s.hooks.PreToolUse.some((m) => (m.hooks ?? []).some((h) => String(h.command ?? "").includes("jaga-wilayah.mjs")));
-  if (sudah) return false;
-  s.hooks.PreToolUse.unshift({ matcher: "Edit|Write|NotebookEdit", hooks: [{ type: "command", command: HOOK_CMD, timeout: 10 }] });
-  return true;
+  if (!sudah) {
+    s.hooks.PreToolUse.unshift({ matcher: "Edit|Write|NotebookEdit", hooks: [{ type: "command", command: HOOK_CMD, timeout: 10 }] });
+    berubah = true;
+  }
+  if (s.statusLine === undefined) {
+    s.statusLine = { type: "command", command: STATUSLINE_CMD, refreshInterval: 60 };
+    berubah = true;
+  }
+  return berubah;
 }
 
 /** Sisipkan / ganti blok bertanda di CLAUDE.md. */
@@ -144,8 +153,8 @@ export function pasang(o) {
     const rel = ".claude/settings.json";
     const p = join(target, rel);
     const s = existsSync(p) ? JSON.parse(readFileSync(p, "utf8")) : { $schema: "https://json.schemastore.org/claude-code-settings.json" };
-    if (gabungSettings(s)) { tulis(rel, JSON.stringify(s, null, 2) + "\n"); catat(rel, "hook jaga-wilayah didaftarkan"); }
-    else catat(rel, "hook sudah terdaftar");
+    if (gabungSettings(s)) { tulis(rel, JSON.stringify(s, null, 2) + "\n"); catat(rel, "hook jaga-wilayah / status line didaftarkan"); }
+    else catat(rel, "hook & status line sudah terdaftar");
   }
   // .gitignore
   {
@@ -209,7 +218,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
       perbarui: !!a.perbarui, paksa: !!a.paksa, dryRun: !!a["dry-run"],
       versi: sha ? `${versi}+${sha}` : versi,
     });
-    const diam = new Set(["sudah terbaru", "dipertahankan (milik proyek)", "hook sudah terdaftar", "sudah memuat pola meja", "blok Mode Tim sudah terbaru"]);
+    const diam = new Set(["sudah terbaru", "dipertahankan (milik proyek)", "hook & status line sudah terdaftar", "sudah memuat pola meja", "blok Mode Tim sudah terbaru"]);
     console.log(`studio-kit ${manifes.versi} → ${manifes.nilai.proyek} (branch utama ${manifes.nilai.branchUtama}, CEO ${manifes.nilai.ceo})${a["dry-run"] ? "  [--dry-run: tidak ada yang ditulis]" : ""}`);
     for (const l of langkah) if (!diam.has(l.aksi)) console.log(`  ${l.aksi.padEnd(12)} ${l.rel}`);
     console.log(`  ${langkah.filter((l) => diam.has(l.aksi)).length} berkas tidak berubah · jabatan: ${manifes.jabatan.join(", ")}`);

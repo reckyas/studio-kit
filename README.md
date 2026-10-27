@@ -11,6 +11,7 @@ digabung. Netral-proyek: perilaku per proyek diatur lewat berkas konfigurasi.
 | Meja kerja | `tools/tim/meja.mjs` | Membuka/menutup worktree + branch + slot port/DB per tiket, membuka tab terminal agent |
 | Penjaga wilayah | `.claude/hooks/jaga-wilayah.mjs` | Hook yang menolak agent mengedit berkas di luar wilayah jabatannya |
 | Jabatan | `.claude/agents/*.md` | 12 jabatan: `cto`, `code-reviewer`, `product-manager`, engineer backend/frontend/mobile/web, `designer`, `qa-engineer`, `security-engineer`, `devops-engineer`, `tech-writer` |
+| Status line | `.claude/statusline.mjs` | `@akun · [model] · ctx ▓▓░░ % · 5j % · 7h %` di terminal; didaftarkan di `.claude/settings.json` hanya bila proyek belum punya `statusLine` |
 | Gerbang uji | `.claude/skills/uji-fitur/` | Triase tingkat uji T0–T3 dari perubahan git + panduan blok keamanan/performa |
 | Buku pegangan | `docs/tim/SOP_TIM.md`, `docs/tim/templat/` | Aturan emas, siklus sprint, format pesan antar sesi, templat tiket/laporan/keputusan |
 | Catatan proyek | `docs/tim/PAPAN.md`, `docs/PROGRESS.md`, `docs/BUGLOG.md` | Kerangka kosong, dibuat hanya bila belum ada |

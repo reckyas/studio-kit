@@ -34,6 +34,8 @@ test("pemasangan baru: berkas lengkap, penanda terisi, hook + gitignore + blok C
   assert.match(baca(d, "docs/tim/templat/LAPORAN.md"), /\{\{TIKET\}\}/);
   const s = JSON.parse(baca(d, ".claude/settings.json"));
   assert.match(s.hooks.PreToolUse[0].hooks[0].command, /jaga-wilayah\.mjs/);
+  assert.match(s.statusLine.command, /statusline\.mjs/);
+  assert.ok(existsSync(join(d, ".claude/statusline.mjs")), "berkas status line harus ada");
   assert.match(baca(d, ".gitignore"), /^\.claude\/tim\/\*\.local\.\*$/m);
   const c = baca(d, "CLAUDE.md");
   assert.ok(c.includes(MULAI) && c.includes(AKHIR) && c.includes("## Mode Tim"));
@@ -66,7 +68,7 @@ test("berkas yang sudah ada di proyek tidak ditimpa; settings & CLAUDE.md lama d
   const d = repoBaru(); t.after(() => rmSync(d, { recursive: true, force: true }));
   mkdirSync(join(d, ".claude/agents"), { recursive: true });
   writeFileSync(join(d, ".claude/agents/cto.md"), "CTO buatan sendiri\n");
-  writeFileSync(join(d, ".claude/settings.json"), JSON.stringify({ permissions: { allow: ["Bash(npm test:*)"] }, hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ type: "command", command: "echo hai" }] }] } }));
+  writeFileSync(join(d, ".claude/settings.json"), JSON.stringify({ permissions: { allow: ["Bash(npm test:*)"] }, statusLine: { type: "command", command: "echo milik-proyek" }, hooks: { PreToolUse: [{ matcher: "Bash", hooks: [{ type: "command", command: "echo hai" }] }] } }));
   writeFileSync(join(d, "CLAUDE.md"), "# Proyek\n\nAturan lama.\n");
   writeFileSync(join(d, "docs.txt"), "x");
   const { langkah } = pasang({ target: d, ...NILAI });
@@ -75,6 +77,7 @@ test("berkas yang sudah ada di proyek tidak ditimpa; settings & CLAUDE.md lama d
   const s = JSON.parse(baca(d, ".claude/settings.json"));
   assert.deepEqual(s.permissions.allow, ["Bash(npm test:*)"]);
   assert.equal(s.hooks.PreToolUse.length, 2);
+  assert.deepEqual(s.statusLine, { type: "command", command: "echo milik-proyek" });
   assert.ok(s.hooks.PreToolUse.some((m) => m.hooks[0].command === "echo hai"));
   assert.match(baca(d, "CLAUDE.md"), /^# Proyek\n\nAturan lama\.\n\n<!-- studio-kit:mulai/);
   // --paksa menimpa berkas PROYEK
@@ -133,6 +136,10 @@ test("gabungSettings & sisipBlok: kasus tepi", () => {
   assert.equal(gabungSettings(s), true);
   assert.equal(gabungSettings(s), false);
   assert.equal(s.hooks.PreToolUse.length, 1);
+  assert.equal(s.statusLine.refreshInterval, 60);
+  const punyaProyek = { statusLine: { type: "command", command: "x" }, hooks: { PreToolUse: [{ hooks: [{ command: "jaga-wilayah.mjs" }] }] } };
+  assert.equal(gabungSettings(punyaProyek), false);
+  assert.equal(punyaProyek.statusLine.command, "x");
   assert.equal(sisipBlok("", "isi"), `${MULAI}\nisi\n${AKHIR}\n`);
   const dua = sisipBlok(sisipBlok("# A\n", "satu"), "dua");
   assert.ok(dua.includes("dua") && !dua.includes("satu") && dua.startsWith("# A\n"));
